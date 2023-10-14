@@ -1,0 +1,48 @@
+version: "3.7"
+services:
+    app:
+        build:
+            args:
+                user: root
+                uid: 1000
+            context: ./
+            dockerfile: Dockerfile
+        image: bus-management
+        container_name: bus-management-app
+        restart: unless-stopped
+        working_dir: /var/www/
+        volumes:
+            - ./:/var/www
+        networks:
+            - bus
+
+    db:
+        image: mysql:latest
+        container_name: bus-management-db
+        ports:
+          - 3306:3306
+        environment:
+                MYSQL_DATABASE: bus
+                MYSQL_USER: root
+                MYSQL_PASSWORD: secret
+                MYSQL_ROOT_PASSWORD: secret
+        volumes:
+            - ./docker/mysql:/docker-entrypoint-initdb.d
+        networks:
+            - bus
+
+    nginx:
+        image: nginx:alpine
+        container_name: bus-management-nginx
+        restart: unless-stopped
+        ports:
+            - 8000:80
+        volumes:
+            - ./:/var/www
+            - ./docker/nginx:/etc/nginx/conf.d/
+        networks:
+            - bus
+
+networks:
+    bus:
+        driver: bridge
